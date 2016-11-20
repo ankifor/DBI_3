@@ -27,7 +27,8 @@ Table_stock      stock;
 extern void oltp(Timestamp now);
 extern void deliveryRandom(Timestamp now);
 extern void newOrderRandom(Timestamp now);
-extern Numeric<12,2> join_query();
+extern Numeric<12,4> join_query();
+extern void join_query1();
 
 
 atomic<bool> childRunning;
@@ -40,7 +41,7 @@ size_t num_query;
 
 
 static void child_main() {
-	Numeric<12,2> sum = 0;
+	Numeric<12,4> sum = 0;
 	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	try {
 		sum = join_query();
@@ -225,7 +226,7 @@ int main0(int argc, char **argv)
 	return 0;
 }
 
-int main1(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	if (argc < 2) {
 		cerr << "Wrong call, please, use:" << endl
@@ -241,13 +242,14 @@ int main1(int argc, char **argv)
 	chrono::duration<int64_t, std::micro> elapsed = chrono::duration<int64_t, std::micro>::zero();
 
 
-	size_t n = 10;
-	Numeric<12,2> sum;
+	size_t n = 1;//10;
+	Numeric<12,4> sum;
 	{int i; cout << "..."; cin >> i; cout << endl;}
 	for (size_t i = 0; i < n; ++i) {
 		start = chrono::high_resolution_clock::now();
 		try {
-			sum = join_query();
+			//sum = join_query();
+			join_query1();
 		} catch (const exception& e) {
 			cout << e.what() << endl;
 		}
@@ -261,68 +263,6 @@ int main1(int argc, char **argv)
 	auto m = (chrono::duration_cast<chrono::milliseconds>(elapsed)).count();
 	cout << m << ' '                         //ms total
 	    << double(m) / double(n)  << endl;   //ms per transaction
-
-	return 0;
-}
-
-bool pred(const Varchar<16>& s) { return s.len > 0 && s.value[0] == 'B'; }
-
-void run_query() {
-  using type_tuple = tuple<Integer, Integer, Integer>;
-  using type_tids = tuple<Tid, Tid>;
-  unordered_multimap<type_tuple, type_tids, hash_types::hash<type_tuple>> hash;
-  using type_tuple1 = tuple<Integer, Integer, Integer>;
-  using type_tids1 = tuple<Tid>;
-  unordered_multimap<type_tuple1, type_tids1, hash_types::hash<type_tuple1>>
-      hash1;
-  for (Tid tid = 0; tid < customer.size(); ++tid) {
-    if (pred(customer.c_last[tid])) {
-      auto t = make_tuple(customer.c_w_id[tid], customer.c_d_id[tid],
-                          customer.c_id[tid]);
-      auto t_tids = make_tuple(tid);
-      hash1.insert(make_pair(t, t_tids));
-    }
-  }
-  for (Tid tid1 = 0; tid1 < order.size(); ++tid1) {
-    auto t =
-        make_tuple(order.o_w_id[tid1], order.o_d_id[tid1], order.o_c_id[tid1]);
-    for (auto it = hash1.equal_range(t); it.first != it.second; ++it.first) {
-      auto tid = get<0>(it.first->second);
-      auto t =
-          make_tuple(order.o_w_id[tid1], order.o_d_id[tid1], order.o_id[tid1]);
-      auto t_tids = make_tuple(tid, tid1);
-      hash.insert(make_pair(t, t_tids));
-    }
-  }
-  int count = 0;
-  for (Tid tid2 = 0; tid2 < orderline.size() && count < 10; ++tid2) {
-    auto t = make_tuple(orderline.ol_w_id[tid2], orderline.ol_d_id[tid2],
-                        orderline.ol_o_id[tid2]);
-    for (auto it = hash.equal_range(t); it.first != it.second; ++it.first) {
-      auto tid = get<0>(it.first->second);
-      auto tid1 = get<1>(it.first->second);
-      cout << customer.c_id[tid] << "," << order.o_id[tid1] << ","
-           << orderline.ol_o_id[tid2] << "," << orderline.ol_d_id[tid2] << ","
-           << orderline.ol_w_id[tid2] << "," << orderline.ol_number[tid2]
-<< endl;
-		++count;
-    }
-  }
-}
-
-
-int main(int argc, char **argv)
-{
-	if (argc < 2) {
-		cerr << "Wrong call, please, use:" << endl
-			 << argv[0] << " <path_to_tables>" << endl;
-		return 1;
-	}
-	string path_in = argv[1]; path_in += "/";
-
-	read_data(path_in);
-
-	run_query();
 
 	return 0;
 }
