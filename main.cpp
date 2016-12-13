@@ -28,7 +28,8 @@ extern void oltp(Timestamp now);
 extern void deliveryRandom(Timestamp now);
 extern void newOrderRandom(Timestamp now);
 extern Numeric<12,4> join_query();
-extern void join_query1();
+extern Numeric<12,4> join_query1();
+extern Numeric<12,4> join_query2();
 
 
 atomic<bool> childRunning;
@@ -80,41 +81,41 @@ static void read_data(const string& path)
 {
 	ifstream in;
 
-	in.open(path + "tpcc_warehouse.tbl");
-	warehouse.read_from_file(in);
-	in.close();
-
-	in.open(path + "tpcc_district.tbl");
-	district.read_from_file(in);
-	in.close();
+//	in.open(path + "tpcc_warehouse.tbl");
+//	warehouse.read_from_file(in);
+//	in.close();
+//
+//	in.open(path + "tpcc_district.tbl");
+//	district.read_from_file(in);
+//	in.close();
 
 	in.open(path + "tpcc_customer.tbl");
 	customer.read_from_file(in);
 	in.close();
 
-	in.open(path + "tpcc_history.tbl");
-	history.read_from_file(in);
-	in.close();
+//	in.open(path + "tpcc_history.tbl");
+//	history.read_from_file(in);
+//	in.close();
 
 	in.open(path + "tpcc_order.tbl");
 	order.read_from_file(in);
 	in.close();
 
-	in.open(path + "tpcc_neworder.tbl");
-	neworder.read_from_file(in);
-	in.close();
+//	in.open(path + "tpcc_neworder.tbl");
+//	neworder.read_from_file(in);
+//	in.close();
 
 	in.open(path + "tpcc_orderline.tbl");
 	orderline.read_from_file(in);
 	in.close();
 
-	in.open(path + "tpcc_item.tbl");
-	item.read_from_file(in);
-	in.close();
-
-	in.open(path + "tpcc_stock.tbl");
-	stock.read_from_file(in);
-	in.close();
+//	in.open(path + "tpcc_item.tbl");
+//	item.read_from_file(in);
+//	in.close();
+//
+//	in.open(path + "tpcc_stock.tbl");
+//	stock.read_from_file(in);
+//	in.close();
 }
 
 static int test(int argc, char **argv) {
@@ -240,29 +241,42 @@ int main(int argc, char **argv)
 	chrono::high_resolution_clock::time_point start;
 	chrono::high_resolution_clock::time_point end;
 	chrono::duration<int64_t, std::micro> elapsed = chrono::duration<int64_t, std::micro>::zero();
+	chrono::duration<int64_t, std::micro> elapsed0 = chrono::duration<int64_t, std::micro>::zero();
 
 
-	size_t n = 1;//10;
+	size_t n = 10;
 	Numeric<12,4> sum;
-	{int i; cout << "..."; cin >> i; cout << endl;}
+	//{int i; cout << "..."; cin >> i; cout << endl;}
 	for (size_t i = 0; i < n; ++i) {
 		start = chrono::high_resolution_clock::now();
 		try {
-			//sum = join_query();
-			join_query1();
+			sum = join_query2();
 		} catch (const exception& e) {
 			cout << e.what() << endl;
 		}
 		end = chrono::high_resolution_clock::now();
 		elapsed += chrono::duration_cast<chrono::microseconds>(end - start);
-		cout << sum << ";ms:"
+		cout << "2:" << sum << ";ms:"
+			<< chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl;
+		
+		
+		start = chrono::high_resolution_clock::now();
+		try {
+			sum = join_query1();
+		} catch (const exception& e) {
+			cout << e.what() << endl;
+		}
+		end = chrono::high_resolution_clock::now();
+		elapsed0 += chrono::duration_cast<chrono::microseconds>(end - start);
+		cout << "1:" << sum << ";ms:"
 			<< chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl;
 	}
 	
-	{int i; cout << "..."; cin >> i; cout << endl;}
+	//{int i; cout << "..."; cin >> i; cout << endl;}
 	auto m = (chrono::duration_cast<chrono::milliseconds>(elapsed)).count();
-	cout << m << ' '                         //ms total
-	    << double(m) / double(n)  << endl;   //ms per transaction
+	cout << "avg 2:" << double(m) / double(n)  << endl;   //ms per transaction
+	m = (chrono::duration_cast<chrono::milliseconds>(elapsed0)).count();
+	cout << "avg 1:" << double(m) / double(n)  << endl;   //ms per transaction
 
 	return 0;
 }
