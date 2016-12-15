@@ -82,6 +82,13 @@ public:
 		++_size;
 		return &_blocks[_last_block][_last_block_size++];
 	}
+
+	T* insert(const T& t) {
+		check_new_block();
+		_blocks[_last_block][_last_block_size] = t;
+		++_size;
+		return &_blocks[_last_block][_last_block_size++];
+	}	
 	
 	void reset() {
 		_last_block = 0;

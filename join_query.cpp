@@ -10,9 +10,9 @@
 
 using namespace std;
 
-static bool pred(Integer c_id, Integer c_d_id, Integer c_w_id) {
-	return c_id == 1 && c_d_id<=10 && c_w_id==4;
-}
+//static bool pred(Integer c_id, Integer c_d_id, Integer c_w_id) {
+//	return c_id == 1 && c_d_id<=10 && c_w_id==4;
+//}
 static bool pred0(Varchar<16> c_last) {
 	return c_last.len >= 1 && c_last.value[0] == 'B';
 }
@@ -84,7 +84,7 @@ Numeric<12,4> join_query1() {
 	using type_key_wdc = tuple<Integer,Integer,Integer>;//w_id,d_id,c_id
 	using type_val_wdc = tuple<Numeric<12,2>>;//c_balance
 	My_Hash<type_key_wdc, type_val_wdc, hash_types::hash<type_key_wdc>
-		, equal_to<type_key_wdc>, false> hash_wdc;
+		, equal_to<type_key_wdc>, true> hash_wdc;
 	// filter and create hash table
 	for (Tid tid = 0; tid < customer.size(); ++tid) {
 		if (pred0(customer.c_last[tid])) {
@@ -103,7 +103,7 @@ Numeric<12,4> join_query1() {
 	using type_key_wdo = tuple<Integer,Integer,Integer>;//w_id,d_id,o_id
 	using type_val_wdo = tuple<Numeric<12,2>, Numeric<2,0>>;//c_balance * o_ol_cnt
 	My_Hash<type_key_wdo, type_val_wdo, hash_types::hash<type_key_wdo>
-		, equal_to<type_key_wdo>, false> hash_wdo;
+		, equal_to<type_key_wdo>, true> hash_wdo;
 	
 	for (Tid tid = 0; tid < order.size(); ++tid) {
 		auto it = hash_wdc.find(make_tuple(order.o_w_id[tid], order.o_d_id[tid], order.o_c_id[tid]));
@@ -150,14 +150,14 @@ Numeric<12,4> join_query2() {
 	using type_key_wdc = tuple<Integer,Integer,Integer>;//w_id,d_id,c_id
 	using type_val_wdc = tuple<Numeric<12,2>>;//c_balance
 	My_Hash<type_key_wdc, type_val_wdc, hash_types::hash<type_key_wdc>
-		, equal_to<type_key_wdc>, true> hash_wdc;
+		, equal_to<type_key_wdc>, true> hash_wdc;//
 	// filter and create hash table
 	for (Tid tid = 0; tid < customer.size(); ++tid) {
 		if (pred0(customer.c_last[tid])) {
 		//if (pred(customer.c_id[tid],customer.c_d_id[tid],customer.c_w_id[tid])) {
-			hash_wdc.insert(make_pair(
+			hash_wdc.insert(
 				 make_tuple(customer.c_w_id[tid], customer.c_d_id[tid], customer.c_id[tid])
-				,make_tuple(customer.c_balance[tid])));
+				,make_tuple(customer.c_balance[tid]));
 		}
 	}
 	//cerr << "1,hash_wdc:" << hash_wdc.size() << endl;
@@ -172,9 +172,9 @@ Numeric<12,4> join_query2() {
 	for (Tid tid = 0; tid < order.size(); ++tid) {
 		auto it = hash_wdc.find(make_tuple(order.o_w_id[tid], order.o_d_id[tid], order.o_c_id[tid]));
 		if (it != hash_wdc.end()) {
-			hash_wdo.insert(make_pair(
+			hash_wdo.insert(
 				make_tuple(order.o_w_id[tid], order.o_d_id[tid], order.o_id[tid])
-				, make_tuple(get<0>(get<1>(*it)),order.o_ol_cnt[tid])));
+				, make_tuple(get<0>(get<1>(*it)),order.o_ol_cnt[tid]));
 		}
 	}
 	hash_wdc.clear();

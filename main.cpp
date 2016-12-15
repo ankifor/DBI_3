@@ -246,20 +246,8 @@ int main(int argc, char **argv)
 
 	size_t n = 10;
 	Numeric<12,4> sum;
-	//{int i; cout << "..."; cin >> i; cout << endl;}
+	{int i; cout << "..."; cin >> i; cout << endl;}
 	for (size_t i = 0; i < n; ++i) {
-		start = chrono::high_resolution_clock::now();
-		try {
-			sum = join_query2();
-		} catch (const exception& e) {
-			cout << e.what() << endl;
-		}
-		end = chrono::high_resolution_clock::now();
-		elapsed += chrono::duration_cast<chrono::microseconds>(end - start);
-		cout << "2:" << sum << ";ms:"
-			<< chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl;
-		
-		
 		start = chrono::high_resolution_clock::now();
 		try {
 			sum = join_query1();
@@ -270,9 +258,21 @@ int main(int argc, char **argv)
 		elapsed0 += chrono::duration_cast<chrono::microseconds>(end - start);
 		cout << "1:" << sum << ";ms:"
 			<< chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl;
+			
+			
+		start = chrono::high_resolution_clock::now();
+		try {
+			sum = join_query2();
+		} catch (const exception& e) {
+			cout << e.what() << endl;
+		}
+		end = chrono::high_resolution_clock::now();
+		elapsed += chrono::duration_cast<chrono::microseconds>(end - start);
+		cout << "2:" << sum << ";ms:"
+			<< chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl;			
 	}
 	
-	//{int i; cout << "..."; cin >> i; cout << endl;}
+	{int i; cout << "..."; cin >> i; cout << endl;}
 	auto m = (chrono::duration_cast<chrono::milliseconds>(elapsed)).count();
 	cout << "avg 2:" << double(m) / double(n)  << endl;   //ms per transaction
 	m = (chrono::duration_cast<chrono::milliseconds>(elapsed0)).count();
